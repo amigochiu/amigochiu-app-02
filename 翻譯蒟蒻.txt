@@ -1,0 +1,479 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, Copy, ArrowRightLeft, Languages, Trash2, Volume2, Sparkles, Loader2, MessageSquare, Mic, MicOff, StopCircle, Palette, Check, X } from 'lucide-react';
+
+const LANGUAGES = [
+  { code: 'zh-TW', name: '繁體中文 (台灣)', voiceCode: 'zh-TW' },
+  { code: 'en-US', name: 'English', voiceCode: 'en-US' },
+  { code: 'ja-JP', name: '日本語 (日本)', voiceCode: 'ja-JP' },
+  { code: 'ko-KR', name: '한국어 (韓國)', voiceCode: 'ko-KR' },
+  { code: 'es-ES', name: 'Español (西班牙)', voiceCode: 'es-ES' },
+  { code: 'fr-FR', name: 'Français (法國)', voiceCode: 'fr-FR' },
+  { code: 'de-DE', name: 'Deutsch (德國)', voiceCode: 'de-DE' },
+  { code: 'th-TH', name: 'ไทย (泰國)', voiceCode: 'th-TH' },
+  { code: 'vi-VN', name: 'Tiếng Việt (越南)', voiceCode: 'vi-VN' },
+];
+
+const SOURCE_UI_TEXTS = {
+  'zh-TW': { label: '你的內容', placeholder: '請輸入文字...', listening: '正在聆聽...', speak: '請說話...' },
+  'en-US': { label: 'Your Text', placeholder: 'Enter text...', listening: 'Listening...', speak: 'Speak now...' },
+  'ja-JP': { label: '入力内容', placeholder: 'テキストを入力...', listening: '聞き取り中...', speak: 'お話しください...' },
+  'ko-KR': { label: '입력 내용', placeholder: '텍스트 입력...', listening: '듣고 있어요...', speak: '말씀하세요...' },
+  'es-ES': { label: 'Tu texto', placeholder: 'Ingresa texto...', listening: 'Escuchando...', speak: 'Habla ahora...' },
+  'fr-FR': { label: 'Votre texte', placeholder: 'Saisir du texte...', listening: 'Écoute...', speak: 'Parlez maintenant...' },
+  'de-DE': { label: 'Ihr Text', placeholder: 'Text eingeben...', listening: 'Zuhören...', speak: 'Bitte sprechen...' },
+  'th-TH': { label: 'ข้อความของคุณ', placeholder: 'ป้อนข้อความ...', listening: 'กำลังฟัง...', speak: 'พูดได้เลย...' },
+  'vi-VN': { label: 'Nội dung', placeholder: 'Nhập văn bản...', listening: 'Đang nghe...', speak: 'Hãy nói...' },
+};
+
+const TARGET_UI_TEXTS = {
+  'zh-TW': { waiting: '等待翻譯...', hint: '翻譯結果將顯示於此', loading: '正在翻譯給對方...', title: '給對方的訊息' },
+  'en-US': { waiting: 'Waiting for translation...', hint: 'Translation will appear here', loading: 'Translating...', title: 'Message for you' },
+  'ja-JP': { waiting: '翻訳を待っています...', hint: 'ここに翻訳結果が表示されます', loading: '翻訳中...', title: 'あなたへのメッセージ' },
+  'ko-KR': { waiting: '번역 대기 중...', hint: '번역 결과가 여기에 표시됩니다', loading: '번역 중...', title: '당신을 위한 메시지' },
+  'es-ES': { waiting: 'Esperando traducción...', hint: 'La traducción aparecerá aquí', loading: 'Traduciendo...', title: 'Mensaje para ti' },
+  'fr-FR': { waiting: 'En attente de traduction...', hint: 'La traduction apparaîtra ici', loading: 'Traduction en cours...', title: 'Message pour vous' },
+  'de-DE': { waiting: 'Warten auf Übersetzung...', hint: 'Die Übersetzung wird hier angezeigt', loading: 'Übersetzen...', title: 'Nachricht für Sie' },
+  'th-TH': { waiting: 'รอการแปล...', hint: 'ผลลัพธ์การแปลจะแสดงที่นี่', loading: 'กำลังแปล...', title: 'ข้อความสำหรับคุณ' },
+  'vi-VN': { waiting: 'Đang chờ dịch...', hint: 'Kết quả dịch sẽ xuất hiện ở đây', loading: 'Đang dịch...', title: 'Tin nhắn cho bạn' },
+};
+
+// --- 主題設定 (全繽紛色系) ---
+const THEMES = {
+  candy: {
+    id: 'candy',
+    name: '夢幻糖果',
+    colorDot: 'bg-gradient-to-br from-purple-400 to-pink-500',
+    bg: 'bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 text-slate-700',
+    topCard: 'bg-gradient-to-br from-fuchsia-400 to-purple-500 shadow-purple-300/50',
+    topCardText: 'text-white',
+    langBar: 'bg-white/60 border-white/50 text-purple-900',
+    swapBtn: 'bg-purple-100 text-purple-600 hover:bg-purple-200',
+    inputBg: 'bg-white/70 border-white/60',
+    inputLabelDefault: 'text-purple-400',
+    inputFocus: 'focus-within:border-purple-300 focus-within:ring-purple-200/50',
+    inputText: 'text-slate-800 placeholder-purple-300',
+    playBtn: 'bg-gradient-to-b from-teal-50 to-teal-100 text-teal-600 border-teal-200/50',
+    playBtnActive: 'from-teal-100 to-teal-200',
+    transBtn: 'bg-gradient-to-b from-indigo-400 to-violet-600 text-white shadow-indigo-400/40',
+    micBtn: 'bg-gradient-to-b from-pink-50 to-pink-100 text-pink-500 border-pink-200/50',
+    micActive: 'from-pink-400 to-pink-600 text-white shadow-pink-400/50',
+    themeBtn: 'bg-fuchsia-100 text-fuchsia-600 hover:bg-fuchsia-200'
+  },
+  summer: {
+    id: 'summer',
+    name: '熱情夏日',
+    colorDot: 'bg-gradient-to-br from-orange-400 to-red-500',
+    bg: 'bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 text-orange-900/80',
+    topCard: 'bg-gradient-to-br from-orange-400 to-rose-500 shadow-orange-300/50',
+    topCardText: 'text-white',
+    langBar: 'bg-white/60 border-white/50 text-orange-800',
+    swapBtn: 'bg-orange-100 text-orange-600 hover:bg-orange-200',
+    inputBg: 'bg-white/70 border-white/60',
+    inputLabelDefault: 'text-orange-400',
+    inputFocus: 'focus-within:border-orange-300 focus-within:ring-orange-200/50',
+    inputText: 'text-orange-950 placeholder-orange-300',
+    playBtn: 'bg-gradient-to-b from-yellow-50 to-yellow-100 text-yellow-700 border-yellow-200/50',
+    playBtnActive: 'from-yellow-100 to-yellow-200',
+    transBtn: 'bg-gradient-to-b from-orange-500 to-red-500 text-white shadow-orange-500/40',
+    micBtn: 'bg-gradient-to-b from-rose-50 to-rose-100 text-rose-500 border-rose-200/50',
+    micActive: 'from-rose-500 to-red-600 text-white shadow-rose-500/50',
+    themeBtn: 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+  },
+  ocean: {
+    id: 'ocean',
+    name: '清新海洋',
+    colorDot: 'bg-gradient-to-br from-cyan-400 to-blue-500',
+    bg: 'bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 text-slate-700',
+    topCard: 'bg-gradient-to-br from-cyan-400 to-blue-500 shadow-cyan-300/50',
+    topCardText: 'text-white',
+    langBar: 'bg-white/60 border-white/50 text-blue-900',
+    swapBtn: 'bg-cyan-100 text-cyan-600 hover:bg-cyan-200',
+    inputBg: 'bg-white/70 border-white/60',
+    inputLabelDefault: 'text-cyan-500',
+    inputFocus: 'focus-within:border-cyan-300 focus-within:ring-cyan-200/50',
+    inputText: 'text-slate-800 placeholder-cyan-300',
+    playBtn: 'bg-gradient-to-b from-emerald-50 to-emerald-100 text-emerald-600 border-emerald-200/50',
+    playBtnActive: 'from-emerald-100 to-emerald-200',
+    transBtn: 'bg-gradient-to-b from-sky-400 to-blue-600 text-white shadow-sky-400/40',
+    micBtn: 'bg-gradient-to-b from-indigo-50 to-indigo-100 text-indigo-500 border-indigo-200/50',
+    micActive: 'from-indigo-400 to-violet-600 text-white shadow-indigo-400/50',
+    themeBtn: 'bg-sky-100 text-sky-600 hover:bg-sky-200'
+  },
+  forest: {
+    id: 'forest',
+    name: '森之秘境',
+    colorDot: 'bg-gradient-to-br from-emerald-400 to-green-600',
+    bg: 'bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 text-emerald-900',
+    topCard: 'bg-gradient-to-br from-emerald-500 to-green-600 shadow-emerald-400/50',
+    topCardText: 'text-white',
+    langBar: 'bg-white/60 border-white/50 text-emerald-800',
+    swapBtn: 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200',
+    inputBg: 'bg-white/70 border-white/60',
+    inputLabelDefault: 'text-emerald-500',
+    inputFocus: 'focus-within:border-emerald-400 focus-within:ring-emerald-200/50',
+    inputText: 'text-emerald-950 placeholder-emerald-300',
+    playBtn: 'bg-gradient-to-b from-lime-50 to-lime-100 text-lime-700 border-lime-200/50',
+    playBtnActive: 'from-lime-100 to-lime-200',
+    transBtn: 'bg-gradient-to-b from-emerald-500 to-teal-600 text-white shadow-emerald-500/40',
+    micBtn: 'bg-gradient-to-b from-teal-50 to-teal-100 text-teal-600 border-teal-200/50',
+    micActive: 'from-teal-400 to-teal-600 text-white shadow-teal-400/50',
+    themeBtn: 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'
+  }
+};
+
+export default function App() {
+  const [inputText, setInputText] = useState('');
+  const [translatedText, setTranslatedText] = useState('');
+  const [sourceLang, setSourceLang] = useState('zh-TW');
+  const [targetLang, setTargetLang] = useState('ja-JP');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  // 主題狀態與選單控制
+  const [currentThemeId, setCurrentThemeId] = useState('candy');
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); 
+  const themeMenuRef = useRef(null); // 用於偵測點擊外部的 ref
+  
+  const theme = THEMES[currentThemeId];
+  
+  const recognitionRef = useRef(null);
+
+  const targetUI = TARGET_UI_TEXTS[targetLang] || TARGET_UI_TEXTS['en-US'];
+  const sourceUI = SOURCE_UI_TEXTS[sourceLang] || SOURCE_UI_TEXTS['en-US'];
+
+  // 處理點擊外部關閉選單
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // 如果選單是開啟的，且點擊的目標不在 themeMenuRef 範圍內
+      if (isThemeMenuOpen && themeMenuRef.current && !themeMenuRef.current.contains(event.target)) {
+        setIsThemeMenuOpen(false);
+      }
+    };
+
+    // 監聽 mousedown 事件 (比 click 更早觸發，體驗較好)
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isThemeMenuOpen]);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = true;
+
+      recognitionRef.current.onresult = (event) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+           setInputText(finalTranscript);
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          setErrorMsg('請允許麥克風權限');
+          setTimeout(() => setErrorMsg(''), 3000);
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const handleTranslate = async () => {
+    if (!inputText.trim()) {
+      setErrorMsg('請輸入要翻譯的文字');
+      setTimeout(() => setErrorMsg(''), 2000);
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMsg('');
+    setTranslatedText(''); 
+
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(inputText)}&langpair=${sourceLang}|${targetLang}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data.responseStatus === 200) {
+        setTranslatedText(data.responseData.translatedText);
+      } else {
+        setTranslatedText('翻譯服務忙碌中，請稍後再試。');
+        console.error('API Error:', data.responseDetails);
+      }
+    } catch (error) {
+      setTranslatedText('連線錯誤，請檢查網路。');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSpeak = (text, langCode) => {
+    if (!text) return;
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langCode;
+    utterance.rate = 0.9;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      setErrorMsg('您的瀏覽器不支援語音輸入');
+      setTimeout(() => setErrorMsg(''), 3000);
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.lang = sourceLang;
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        setErrorMsg('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleSwapLanguages = () => {
+    setSourceLang(targetLang);
+    setTargetLang(sourceLang);
+    setInputText(translatedText); 
+    setTranslatedText(inputText);
+  };
+
+  const handleClearAll = () => {
+    setInputText('');
+    setTranslatedText('');
+    setErrorMsg('');
+    setIsSpeaking(false);
+    window.speechSynthesis.cancel();
+  };
+
+  const handleThemeChange = (themeId) => {
+    setCurrentThemeId(themeId);
+    setIsThemeMenuOpen(false);
+  };
+
+  return (
+    <div className={`h-screen w-full flex flex-col font-sans overflow-hidden transition-colors duration-500 ${theme.bg} relative`}>
+      
+      <main className="flex-1 w-full max-w-md mx-auto p-4 flex flex-col gap-3 h-full pt-4 relative">
+        
+        {/* --- 區域 1: 翻譯結果 (上方) --- */}
+        <div className="flex-1 w-full min-h-0 flex flex-col">
+            <div className={`flex-1 transform rotate-180 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden flex flex-col relative transition-all duration-500 ${theme.topCard} ${theme.topCardText}`}>
+              <div className="p-6 flex-1 text-center flex flex-col justify-center items-center overflow-y-auto">
+                <span className="text-xs font-bold opacity-80 uppercase tracking-widest mb-2 flex items-center justify-center gap-1 absolute top-4 left-0 right-0">
+                   <MessageSquare size={12} /> {targetUI.title}
+                </span>
+                
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <Loader2 className="animate-spin opacity-90" size={32} />
+                    <span className="opacity-90 text-sm">{targetUI.loading}</span>
+                  </div>
+                ) : translatedText ? (
+                  <div className="text-2xl font-bold leading-relaxed break-words w-full px-2 mt-4 drop-shadow-sm">
+                    {translatedText}
+                  </div>
+                ) : (
+                   <div className="text-lg font-medium flex flex-col items-center justify-center space-y-2 mt-4 opacity-60">
+                      <span>{targetUI.waiting}</span>
+                      <span className="text-xs opacity-80">{targetUI.hint}</span>
+                   </div>
+                )}
+              </div>
+            </div>
+        </div>
+
+        {/* --- 區域 2: 語言選擇 (中間) --- */}
+        <div className={`flex-none backdrop-blur-sm p-2 rounded-2xl shadow-sm border flex items-center justify-between relative z-20 shrink-0 transition-colors duration-500 ${theme.langBar}`}>
+          <select 
+            value={sourceLang}
+            onChange={(e) => setSourceLang(e.target.value)}
+            className="flex-1 bg-transparent font-bold py-2 outline-none text-center appearance-none cursor-pointer truncate transition-colors"
+          >
+            {LANGUAGES.map((lang) => (
+              <option key={`source-${lang.code}`} value={lang.code} className="text-gray-800">{lang.name}</option>
+            ))}
+          </select>
+
+          <button 
+            onClick={handleSwapLanguages}
+            className={`p-2 mx-1 rounded-full transition-colors shadow-sm shrink-0 backdrop-blur-sm ${theme.swapBtn}`}
+            title="交換語言"
+          >
+            <ArrowRightLeft size={18} />
+          </button>
+
+          <select 
+            value={targetLang}
+            onChange={(e) => setTargetLang(e.target.value)}
+            className="flex-1 bg-transparent font-bold py-2 outline-none text-center appearance-none cursor-pointer truncate transition-colors"
+          >
+            {LANGUAGES.map((lang) => (
+              <option key={`target-${lang.code}`} value={lang.code} className="text-gray-800">{lang.name}</option>
+            ))}
+          </select>
+
+          {/* 主題選單開啟按鈕 + 下拉選單 container */}
+          {/* 修改：加入 ref={themeMenuRef} 到此容器，用於偵測點擊外部 */}
+          <div className="relative" ref={themeMenuRef}>
+            <button 
+                onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                className={`p-2 ml-1 rounded-full transition-colors shadow-sm shrink-0 backdrop-blur-sm ${theme.themeBtn}`}
+                title="切換主題"
+            >
+                <Palette size={18} />
+            </button>
+
+            {/* 下拉式小視窗 (Dropdown) - 移除透明點擊層，改用 useEffect 偵測 */}
+            {isThemeMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/60 p-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="flex items-center justify-between px-2 py-1 mb-1 border-b border-gray-100/50">
+                        <span className="text-xs font-bold text-gray-400">選擇主題</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        {Object.values(THEMES).map((t) => (
+                            <button
+                                key={t.id}
+                                onClick={() => handleThemeChange(t.id)}
+                                className={`flex items-center gap-3 p-2 rounded-xl transition-all text-sm font-bold
+                                    ${currentThemeId === t.id 
+                                        ? 'bg-gray-100 text-gray-800' 
+                                        : 'text-gray-500 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <div className={`w-4 h-4 rounded-full ${t.colorDot} shadow-sm ring-1 ring-black/5`}></div>
+                                <span className="flex-1 text-left">{t.name}</span>
+                                {currentThemeId === t.id && <Check size={14} className="text-green-500" />}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+          </div>
+        </div>
+
+        {/* --- 區域 3: 輸入區塊 (下方) --- */}
+        <div className={`flex-1 min-h-0 backdrop-blur-md rounded-2xl shadow-lg border transition-all duration-300 overflow-hidden flex flex-col z-10
+            ${isListening 
+                ? 'border-rose-300 ring-4 ring-rose-100/50' 
+                : `${theme.inputBg} ${theme.inputFocus}`}
+          `}>
+          <div className="p-4 flex-1 flex flex-col h-full">
+            <div className="flex justify-between items-center mb-1 flex-none">
+              <span className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-2 transition-colors
+                 ${isListening ? 'text-rose-500 animate-pulse' : theme.inputLabelDefault}`}>
+                {isListening ? (
+                  <>
+                    <Mic size={12} className="animate-bounce" />
+                    {sourceUI.listening}
+                  </>
+                ) : sourceUI.label}
+              </span>
+              
+              {inputText && (
+                <button 
+                  onClick={handleClearAll} 
+                  className={`p-1.5 rounded-full transition-colors opacity-60 hover:opacity-100 hover:bg-gray-200/50 ${theme.inputLabelDefault}`}
+                  title="清除全部"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+            <textarea
+              className={`flex-1 w-full resize-none outline-none text-lg bg-transparent ${theme.inputText}`}
+              placeholder={isListening ? sourceUI.speak : sourceUI.placeholder}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* --- 區域 4: 操作按鈕組 (底部) --- */}
+        <div className="flex-none flex items-center gap-3 pt-1 pb-2">
+            
+            {/* 左側：播放 */}
+            <button
+                onClick={() => handleSpeak(translatedText, targetLang)}
+                disabled={!translatedText || isLoading}
+                className={`flex-1 py-3.5 rounded-xl font-bold shadow-md flex items-center justify-center space-x-1 transition-all transform active:scale-95 border backdrop-blur-sm
+                    ${!translatedText 
+                    ? 'bg-gray-100/50 text-gray-400 border-gray-200/50 cursor-not-allowed opacity-50' 
+                    : isSpeaking 
+                        ? `shadow-inner ring-2 ${theme.playBtnActive}`
+                        : `${theme.playBtn} hover:-translate-y-0.5`
+                    }`}
+            >
+                {isSpeaking ? <Loader2 size={20} className="animate-spin" /> : <Volume2 size={20} />}
+                <span className="text-sm">播放</span>
+            </button>
+
+            {/* 中間：翻譯 */}
+            <button
+                onClick={handleTranslate}
+                disabled={isLoading || !inputText}
+                className={`flex-[2] py-3.5 rounded-xl font-bold text-lg shadow-xl flex items-center justify-center space-x-2 transition-all transform active:scale-95 border border-white/30 backdrop-blur-md
+                    ${isLoading || !inputText 
+                    ? 'bg-gray-200/50 text-gray-400 border-gray-300/30 cursor-not-allowed shadow-none' 
+                    : `${theme.transBtn} hover:-translate-y-0.5 active:translate-y-0`
+                    }`}
+            >
+                {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Sparkles size={20} />}
+                <span>翻譯</span>
+            </button>
+
+             {/* 右側：語音輸入 */}
+             <button
+                onClick={toggleListening}
+                className={`flex-1 py-3.5 rounded-xl font-bold shadow-md flex items-center justify-center transition-all transform active:scale-95 border backdrop-blur-sm
+                    ${isListening
+                        ? `${theme.micActive} animate-pulse ring-2 ring-opacity-50 border-transparent`
+                        : `${theme.micBtn} hover:-translate-y-0.5`
+                    }`}
+            >
+                {isListening ? <StopCircle size={22} /> : <Mic size={22} />}
+            </button>
+        </div>
+
+        {/* 錯誤/狀態提示氣泡 */}
+        {errorMsg && (
+          <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-800/80 backdrop-blur-md text-white px-6 py-3 rounded-full text-sm shadow-xl z-50 animate-bounce flex items-center border border-white/10">
+            {errorMsg}
+          </div>
+        )}
+
+      </main>
+    </div>
+  );
+}

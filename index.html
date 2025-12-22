@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>翻譯蒟蒻</title>
+
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="img/logo.png">
+    <link rel="shortcut icon" href="img/logo.png" type="image/x-icon">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Nunito:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app" class="app-container">
+        <!-- Main content will be dynamically updated by script.js but basic structure is here -->
+        <main class="main-content">
+
+            <!-- Area 1: Translation Result (Top) -->
+            <div class="card result-card">
+                <div class="card-content">
+                    <span class="label-badge target-badge">
+                        <i data-lucide="message-square"></i> <span id="target-title">給對方的訊息</span>
+                    </span>
+
+                    <div id="result-container" class="result-container">
+                        <div id="waiting-state" class="state-content">
+                            <span id="target-waiting">等待翻譯...</span>
+                            <small id="target-hint">翻譯結果將顯示於此</small>
+                        </div>
+                        <div id="loading-state" class="state-content hidden">
+                            <i data-lucide="loader-2" class="spin"></i>
+                            <span id="target-loading">正在翻譯給對方...</span>
+                        </div>
+                        <div id="success-state" class="state-content hidden">
+                            <p id="translated-text"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Area 2: Language Control (Middle) -->
+            <div class="control-bar">
+                <div class="select-wrapper">
+                    <select id="source-lang"></select>
+                </div>
+
+                <button id="swap-btn" class="icon-btn" title="交換語言">
+                    <i data-lucide="arrow-right-left"></i>
+                </button>
+
+                <div class="select-wrapper">
+                    <select id="target-lang"></select>
+                </div>
+
+                <div class="theme-dropdown-container">
+                    <button id="theme-btn" class="icon-btn" title="切換主題">
+                        <i data-lucide="palette"></i>
+                    </button>
+                    <!-- Theme Menu -->
+                    <div id="theme-menu" class="theme-menu hidden">
+                        <div class="menu-header">選擇主題</div>
+                        <div id="theme-list" class="menu-list">
+                            <!-- Themes will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Area 3: Input Area (Bottom) -->
+            <div id="input-card" class="card input-card">
+                <div class="card-header">
+                    <span id="input-label-badge" class="label-badge input-badge">
+                        <span id="input-label-text" class="main-label">你的內容</span>
+                        <span class="version-tag">v2025.12.22.01</span>
+                    </span>
+                    <button id="clear-btn" class="icon-btn sm hidden" title="清除全部">
+                        <i data-lucide="trash-2"></i>
+                    </button>
+                </div>
+                <textarea id="input-text" placeholder="請輸入文字..." spellcheck="false"></textarea>
+            </div>
+
+            <!-- Area 4: Action Buttons (Footer) -->
+            <div class="action-bar">
+                <button id="play-btn" class="action-btn secondary" disabled>
+                    <i data-lucide="volume-2"></i>
+                    <span>播放</span>
+                </button>
+
+                <button id="trans-btn" class="action-btn primary" disabled>
+                    <i data-lucide="sparkles"></i>
+                    <span>翻譯</span>
+                </button>
+
+                <button id="mic-btn" class="action-btn secondary">
+                    <i data-lucide="mic"></i>
+                </button>
+            </div>
+
+            <!-- Error Toast -->
+            <div id="toast" class="toast hidden"></div>
+        </main>
+    </div>
+
+    <!-- PWA Install Prompt (Optional, custom UI) -->
+
+    <script src="script.js"></script>
+</body>
+
+</html>
