@@ -176,7 +176,7 @@ body.theme-forest {
 
 /* Top Card */
 .result-card {
-    flex: 1;
+    flex: 2;
     background: var(--top-card-bg);
     box-shadow: 0 10px 25px -5px var(--top-card-shadow);
     color: var(--top-card-text);
@@ -207,7 +207,7 @@ body.theme-forest {
 
 .result-container {
     width: 100%;
-    font-size: 1.5rem;
+    font-size: 2.5rem;
     font-weight: 700;
     line-height: 1.5;
     word-break: break-word;
