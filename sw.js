@@ -1,4 +1,4 @@
-const CACHE_NAME = 'translator-v1';
+const CACHE_NAME = 'translator-v2025.12.23.01';
 const ASSETS_TO_CACHE = [
     './',
     './index.html',
